@@ -4,7 +4,6 @@ VERSION: 1.0
 */
 
 var website = "http://ent.univ-paris13.fr/";
-var system = require('system');
 const args = system.args;
 var server = require('webserver').create();
 var timestamp = new Date().getTime();
