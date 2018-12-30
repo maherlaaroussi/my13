@@ -1,0 +1,21 @@
+{
+  "name": "My13",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "",
+    "start": "./node_modules/casperjs/bin/casperjs ./index.js &"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "Maher LAAROUSSI",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "casperjs": "^1.1.4",
+    "phantomjs": "^2.1.1"
+  },
+  "files": [
+  ]
+}

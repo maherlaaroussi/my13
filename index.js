@@ -8,12 +8,13 @@ var system = require('system');
 const args = system.args;
 var server = require('webserver').create();
 var timestamp = new Date().getTime();
-
+var service = null;
+var data;
 
 var casper = require("casper").create({
 
-  waitTimeout: 10000,
-  stepTimeout: 10000,
+  waitTimeout: 5000,
+  stepTimeout: 5000,
   verbose: true,
 
   pageSettings: {
@@ -21,10 +22,12 @@ var casper = require("casper").create({
     loadImages:  true
   },
   onWaitTimeout: function() {
-        log('[-] Waiting ...');
+    console.log('[*] Waiting ...');
   },
   onStepTimeout: function() {
-      log('[-] Waiting ...');
+    console.log('[*] Waiting ...');
+  },
+  onRunComplete: function() {
   }
 
 });
@@ -34,7 +37,7 @@ var casper = require("casper").create({
 trame();
 console.log("[!] Server start ...");
 
-var service = server.listen(2828, function (request, response) {
+service = server.listen(2828, function (request, response) {
 
   console.log("");
   console.log("[!] Receive a CURL !");
@@ -42,118 +45,15 @@ var service = server.listen(2828, function (request, response) {
   var username = request.headers.username;
   var password = request.headers.password;
 
-  console.log("[*] Username: " + username);
-  console.log("[*] Password: " + password);
+  data = scrapping(username, password);
 
-  if (username != undefined && password != undefined) {
+  run();
 
-    casper.start(website);
-
-    console.log("");
-
-    casper.waitForSelector('form#fm1', function() {
-
-      if (casper.exists('form#fm1')) {
-        casper.fill('form#fm1', {
-          username: username,
-          password:  password
-        }, true);
-        console.log("[+] Connexion à l'ENT");
-      }
-      else {
-        console.log("[!] Erreur page");
-        response.statusCode = 500;
-        response.close();
-      }
-
-    });
-
-    casper.then(function() {
-      console.log("[+] Attente de 5s");
-    });
-
-    casper.wait(5000, function() {
-
-      if (casper.exists('.wdg_tbntl_welcome')) {
-        casper.capture('screenshots/' + username + '/' + timestamp + '.png');
-        console.log("[+] Connexion OK");
-      }
-      else {
-        console.log("[!] Erreur de connexion");
-        response.statusCode = 500;
-        response.close();
-      }
-
-    });
-
-    casper.then(function() {
-
-      var nom = casper.getElementInfo(".wdg_tbntl_welcome").text.trim().replace('Bienvenue ', '');
-      var postits = casper.getElementInfo("[widgetcounter='mails']").text.trim();
-      var courriels = casper.getElementInfo("[widgetcounter='mails']").text.trim();
-      var informations = casper.getElementInfo("[widgetcounter='nouvelles']").text.trim();
-      var edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
-
-      var edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
-      var art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
-
-      trame();
-
-      console.log("Nom: " + nom);
-      console.log("Post-It: " + postits);
-      console.log("Courriels: " + courriels);
-      console.log("Informations: " + informations);
-
-      console.log("");
-
-      console.log("Date: " + edt_date);
-
-      casper.each(edt_html, function (self, ob) {
-          console.log(ob.text);
-      });
-
-      console.log("");
-
-      console.log("Articles:");
-
-      casper.each(art_html, function (self, ob) {
-          console.log("[?] " + ob.text);
-      });
-this
-      trame();
-
-    });
-
-
+  casper.then(function() {
     response.statusCode = 200;
-    response.write(nom);
+    response.write(JSON.stringify(data));
     response.close();
-
-    casper.thenClick('[rel="dossieradministratif"]');
-
-    casper.then(function() {
-
-      var dossier_html = casper.getElementsInfo("#dossier_administratif div");
-
-      trame();
-
-      casper.each(dossier_html, function (self, ob) {
-          console.log(ob.text);
-      });
-
-      trame();
-
-    });
-
-    casper.run(function() {
-    });
-
-  }
-  else {
-    console.log("[!] Identifiants invalides");
-    response.statusCode = 500;
-    response.close();
-  }
+  });
 
 });
 
@@ -177,4 +77,98 @@ function trame() {
   console.log("");
   console.log("========================================================");
   console.log("");
+}
+
+/* =========================================================  */
+
+function scrapping(username, password) {
+
+  var data = {success: false};
+
+  console.log("[*] Username: " + username);
+  console.log("[*] Password: " + password);
+
+  if (username != undefined && password != undefined) {
+
+    casper.start(website);
+
+    casper.waitForSelector('form#fm1', function() {
+
+      if (casper.exists('form#fm1')) {
+        casper.fill('form#fm1', {
+          username: username,
+          password:  password
+        }, true);
+        console.log("[*] Connexion à l'ENT");
+      }
+      else {
+        console.log("[!] Erreur page");
+        response.statusCode = 500;
+        response.close();
+      }
+
+    });
+
+    casper.then(function() {
+      console.log("[*] Attente de 5s");
+    });
+
+    casper.wait(5000, function() {
+
+      if (casper.exists('.wdg_tbntl_welcome')) {
+        casper.capture('screenshots/' + username + '/' + timestamp + '.png');
+        console.log("[*] Connexion OK");
+      }
+      else {
+        console.log("[!] Erreur de connexion");
+        response.statusCode = 500;
+        response.close();
+      }
+
+    });
+
+    casper.then(function() {
+
+      data.nom = casper.getElementInfo(".wdg_tbntl_welcome").text.trim().replace('Bienvenue ', '');
+      data.postits = casper.getElementInfo("[widgetcounter='mails']").text.trim();
+      data.courriels = casper.getElementInfo("[widgetcounter='mails']").text.trim();
+      data.informations = casper.getElementInfo("[widgetcounter='nouvelles']").text.trim();
+      data.edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
+      data.art = [];
+      data.edt = [];
+
+      edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
+      art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
+
+      console.log("Nom: " + data.nom);
+
+      casper.each(edt_html, function (self, ob) {
+        data.edt.push(ob.text);
+      });
+
+      casper.each(art_html, function (self, ob) {
+        data.art.push(ob.text);
+      });
+
+      trame();
+
+    });
+
+    casper.then(function() {
+      data.success = true;
+      return data;
+    });
+
+
+  }
+  else {
+    console.log("[!] Identifiants invalides");
+  }
+
+  return data;
+
+}
+
+function run() {
+  casper.run();
 }
