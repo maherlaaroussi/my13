@@ -4,11 +4,10 @@ VERSION: 1.0
 */
 
 var website = "http://ent.univ-paris13.fr/";
-const args = system.args;
 var server = require('webserver').create();
 var timestamp = new Date().getTime();
 var service = null;
-var data;
+var d = {};
 
 var casper = require("casper").create({
 
@@ -38,6 +37,8 @@ console.log("[!] Server start ...");
 
 service = server.listen(2828, function (request, response) {
 
+  var data;
+
   console.log("");
   console.log("[!] Receive a CURL !");
 
@@ -49,9 +50,19 @@ service = server.listen(2828, function (request, response) {
   run();
 
   casper.then(function() {
-    response.statusCode = 200;
+
+    if (data.success) {
+      response.statusCode = 200;
+    }
+    else {
+      response.statusCode = 500;
+    }
+
+    phantom.clearCookies();
+
     response.write(JSON.stringify(data));
     response.close();
+
   });
 
 });
@@ -80,14 +91,14 @@ function trame() {
 
 /* =========================================================  */
 
-function scrapping(username, password) {
+function scrapping(user, pass) {
 
-  var data = {success: false};
+  var d = {success: false};
 
-  console.log("[*] Username: " + username);
-  console.log("[*] Password: " + password);
+  console.log("[*] Username: " + user);
+  console.log("[*] Password: " + pass);
 
-  if (username != undefined && password != undefined) {
+  if (user != undefined && pass != undefined) {
 
     casper.start(website);
 
@@ -95,67 +106,67 @@ function scrapping(username, password) {
 
       if (casper.exists('form#fm1')) {
         casper.fill('form#fm1', {
-          username: username,
-          password:  password
+          username: user,
+          password:  pass
         }, true);
         console.log("[*] Connexion à l'ENT");
       }
       else {
         console.log("[!] Erreur page");
-        response.statusCode = 500;
-        response.close();
       }
 
-    });
-
-    casper.then(function() {
-      console.log("[*] Attente de 5s");
     });
 
     casper.wait(5000, function() {
 
       if (casper.exists('.wdg_tbntl_welcome')) {
-        casper.capture('screenshots/' + username + '/' + timestamp + '.png');
+
+        casper.capture('screenshots/' + user + '/' + timestamp + '.png');
         console.log("[*] Connexion OK");
+
+        casper.then(function() {
+
+          d.nom = casper.getElementInfo(".wdg_tbntl_welcome").text.trim().replace('Bienvenue ', '');
+          d.postits = casper.getElementInfo("[widgetcounter='mails']").text.trim();
+          d.courriels = casper.getElementInfo("[widgetcounter='mails']").text.trim();
+          d.informations = casper.getElementInfo("[widgetcounter='nouvelles']").text.trim();
+          d.edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
+          d.art = [];
+          d.edt = [];
+
+          edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
+          art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
+
+          console.log("[!] Nom: " + d.nom);
+
+          casper.each(edt_html, function (self, ob) {
+            d.edt.push(ob.text);
+          });
+
+          casper.each(art_html, function (self, ob) {
+            d.art.push(ob.text);
+          });
+
+          console.log("");
+
+          casper.then(function() {
+            d.success = true;
+          });
+
+        });
+
       }
       else {
         console.log("[!] Erreur de connexion");
-        response.statusCode = 500;
-        response.close();
+        casper.then(function() {
+          d.success = false;
+        });
       }
 
     });
 
     casper.then(function() {
-
-      data.nom = casper.getElementInfo(".wdg_tbntl_welcome").text.trim().replace('Bienvenue ', '');
-      data.postits = casper.getElementInfo("[widgetcounter='mails']").text.trim();
-      data.courriels = casper.getElementInfo("[widgetcounter='mails']").text.trim();
-      data.informations = casper.getElementInfo("[widgetcounter='nouvelles']").text.trim();
-      data.edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
-      data.art = [];
-      data.edt = [];
-
-      edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
-      art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
-
-      console.log("Nom: " + data.nom);
-
-      casper.each(edt_html, function (self, ob) {
-        data.edt.push(ob.text);
-      });
-
-      casper.each(art_html, function (self, ob) {
-        data.art.push(ob.text);
-      });
-
-      trame();
-
-    });
-
-    casper.then(function() {
-      data.success = true;
-      return data;
+      return d;
     });
 
 
@@ -164,7 +175,7 @@ function scrapping(username, password) {
     console.log("[!] Identifiants invalides");
   }
 
-  return data;
+  return d;
 
 }
 
