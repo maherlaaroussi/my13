@@ -121,8 +121,9 @@ function scrapping(user, pass) {
 
       if (casper.exists('.wdg_tbntl_welcome')) {
 
-        // casper.capture('screenshots/' + timestamp + '.png');
         console.log("[*] Connexion OK");
+        
+        casper.capture('screenshots/' + timestamp + '.png');
 
         casper.then(function() {
 
