@@ -148,7 +148,7 @@ function scrapping(user, pass) {
             d.art.push(ob.text);
           });
 
-          console.log("");
+          d.dossier = dossier_administratif();
 
           casper.then(function() {
             d.success = true;
@@ -167,6 +167,7 @@ function scrapping(user, pass) {
     });
 
     casper.then(function() {
+      console.log("");
       return d;
     });
 
@@ -177,6 +178,54 @@ function scrapping(user, pass) {
   }
 
   return d;
+
+}
+
+function dossier_administratif() {
+
+  var dossier = {};
+
+  casper.open('https://ent.univ-paris13.fr/ajax?__class=APOGEE&__function=RenderFiche');
+
+  casper.waitForSelector("#dossier_administratif");
+
+  casper.then(function() {
+
+    dossier_html = casper.getElementsInfo("#dossier_administratif div.float_right_column");
+    var admin = [];
+
+    casper.each(dossier_html, function (self, ob) {
+      admin.push(ob.text);
+    });
+
+    /* Tri */
+    dossier.numero = admin[0];
+    dossier.ine = admin[1];
+    dossier.birthday = admin[3];
+    dossier.cp = admin[5];
+    dossier.adresse = admin[4];
+    dossier.ville = admin[6];
+    dossier.pays = admin[7];
+    dossier.phone = admin[8];
+    dossier.bac = admin[9];
+    dossier.bacannee = admin[10];
+    dossier.inscription = admin[11];
+    dossier.formation = admin[12];
+
+    var exp = new RegExp(/(\(.*\))/g );
+    dossier.code = String(dossier.formation.match(exp));
+    dossier.code = dossier.code.substr(1);
+    dossier.code = dossier.code.substr(0, (dossier.code.length - 1));
+
+    console.log("[!] FORMATION: " + dossier.code);
+    console.log("[!] INE: " + dossier.ine);
+    console.log("[!] BIRTHDAY: " + dossier.birthday);
+
+    return dossier;
+
+  });
+
+  return dossier;
 
 }
 
