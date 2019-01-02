@@ -1,11 +1,11 @@
 {
   "name": "My13",
   "version": "1.0.0",
-  "description": "",
+  "description": "Crawler de l'ENT de l'Université de Paris 13",
   "script": "casperjs index.js",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://gitlab.com/MaherLRS/my13.git"
   },
   "author": "Maher LAAROUSSI",
   "license": "GPL-3.0",
