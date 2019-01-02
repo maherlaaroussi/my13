@@ -2,10 +2,7 @@
   "name": "My13",
   "version": "1.0.0",
   "description": "",
-  "scripts": {
-    "test": "",
-    "start": "./node_modules/casperjs/bin/casperjs ./index.js &"
-  },
+  "script": "casperjs index.js",
   "repository": {
     "type": "git",
     "url": ""
