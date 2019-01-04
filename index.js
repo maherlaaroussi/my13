@@ -101,7 +101,6 @@ function scrapping(user, pass) {
   var d = {success: false};
 
   console.log("[*] Username: " + user);
-  console.log("[*] Password: " + pass);
 
   if (user != undefined && pass != undefined) {
 
