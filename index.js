@@ -17,7 +17,8 @@ var casper = require("casper").create({
 
   pageSettings: {
     webSecurityEnabled: true,
-    loadImages:  true
+    loadImages:  true,
+    userAgent: "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0"
   },
   onWaitTimeout: function() {
     console.log('[*] Waiting ...');
@@ -135,6 +136,10 @@ function scrapping(user, pass) {
           d.art = [];
           d.edt = [];
 
+          d.prenom = d.nom.split(' ')[1];
+          d.nom = d.nom.split(' ')[0];
+
+
           edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
           art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
 
@@ -148,7 +153,39 @@ function scrapping(user, pass) {
             d.art.push(ob.text);
           });
 
+          /* ALL STUFFS */
           d.dossier = dossier_administratif();
+          //d.photo = photo();
+          //edt();
+
+          /*
+          var edt = {};
+
+          casper.thenOpen('https://hyperplanning.univ-paris13.fr/hp2018/invite', function() {
+
+            //this.click('')
+            var edt = {};
+
+            casper.wait(2000, function() {
+
+              console.log("SCREEN!");
+              casper.capture('1.png');
+
+              casper.then( function () {
+                this.clickLabel('Saisie du code', 'div[role="option"]');
+              });
+
+              this.evaluate(function() {
+                $('.PetitEspaceGauche:nth-of-type(2) div:nth-of-type(1)').val('Saisie du code').change();
+              }).
+              then(function() {
+                console.log("SCREEN!");
+                casper.capture('2.png');
+              });
+
+            });
+
+          }); */
 
           casper.then(function() {
             d.success = true;
@@ -178,6 +215,41 @@ function scrapping(user, pass) {
   }
 
   return d;
+
+}
+
+function edt() {
+
+  var edt = {};
+
+  casper.thenOpen('https://hyperplanning.univ-paris13.fr/hp2018/invite');
+
+  casper.waitForSelector('div[tabindex="0"]');
+
+  casper.wait(6000);
+
+  console.log("SCREEN!");
+  casper.capture('1.png');
+
+}
+
+function photo() {
+
+  var image = "";
+
+  casper.back("https://ent.univ-paris13.fr/");
+
+  casper.thenOpen('https://ent.univ-paris13.fr/ajax?__class=WidgetAvatar&__function=render&__args=user');
+
+  casper.waitForSelector("#cp-originale");
+
+  casper.then(function(){
+     image = this.evaluate(function() {
+         return __utils__.findOne('#cp-originale').getAttribute('src');
+     });
+   });
+
+  return image
 
 }
 
