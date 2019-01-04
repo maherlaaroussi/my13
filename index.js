@@ -39,9 +39,13 @@ console.log("[!] Server start ...");
 service = server.listen(2828, function (request, response) {
 
   var data;
+  var date = new Date();
+  var minutes = date.getMinutes();
+  var hours = date.getHours();
+  var seconds = date.getSeconds();
 
   console.log("");
-  console.log("[!] Receive a CURL !");
+  console.log("[" + hours + ":" + minutes + "] Receive a CURL !");
 
   var username = request.headers.username;
   var password = request.headers.password;
