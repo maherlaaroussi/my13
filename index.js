@@ -74,12 +74,12 @@ service = server.listen(2828, function (request, response) {
 
 /* =========================================================  */
 
-casper.on('remote.message', function(msg) {
-    this.echo('Remote message: ' + msg);
+casper.on("remote.message", function(msg) {
+    console.log("[Remote] " + msg);
 });
 
 casper.on("page.error", function(msg, trace) {
-    this.echo("Page Error: " + msg, "ERROR");
+    console.log("[Page Error] " + msg);
 });
 
 /* =========================================================  */
@@ -135,7 +135,7 @@ function scrapping(user, pass) {
           d.postits = casper.getElementInfo("[widgetcounter='mails']").text.trim();
           d.courriels = casper.getElementInfo("[widgetcounter='mails']").text.trim();
           d.informations = casper.getElementInfo("[widgetcounter='nouvelles']").text.trim();
-          d.edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
+          //d.edt_date = casper.getElementInfo("[widget='emploidutemps'] .wdg_et_content b").text.trim();
           d.art = [];
           d.edt = [];
 
@@ -143,52 +143,23 @@ function scrapping(user, pass) {
           d.nom = d.nom.split(' ')[0];
 
 
-          edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
+          //edt_html = casper.getElementsInfo("[widget='emploidutemps'] .wdg_et_content span");
           art_html = casper.getElementsInfo("[widget='articles'] .wdg_la_new_post .wdg_la_titre_content");
 
-          console.log("[!] Nom: " + d.nom);
+          console.log("[!] Nom: " + d.prenom + " " + d.nom.toUpperCase());
 
+          /*
           casper.each(edt_html, function (self, ob) {
             d.edt.push(ob.text);
           });
+          */
 
           casper.each(art_html, function (self, ob) {
             d.art.push(ob.text);
           });
 
           /* ALL STUFFS */
-          d.dossier = dossier_administratif();
-          //d.photo = photo();
-          //edt();
-
-          /*
-          var edt = {};
-
-          casper.thenOpen('https://hyperplanning.univ-paris13.fr/hp2018/invite', function() {
-
-            //this.click('')
-            var edt = {};
-
-            casper.wait(2000, function() {
-
-              console.log("SCREEN!");
-              casper.capture('1.png');
-
-              casper.then( function () {
-                this.clickLabel('Saisie du code', 'div[role="option"]');
-              });
-
-              this.evaluate(function() {
-                $('.PetitEspaceGauche:nth-of-type(2) div:nth-of-type(1)').val('Saisie du code').change();
-              }).
-              then(function() {
-                console.log("SCREEN!");
-                casper.capture('2.png');
-              });
-
-            });
-
-          }); */
+          d.dossier = dossier();
 
           casper.then(function() {
             d.success = true;
@@ -221,44 +192,10 @@ function scrapping(user, pass) {
 
 }
 
-function edt() {
-
-  var edt = {};
-
-  casper.thenOpen('https://hyperplanning.univ-paris13.fr/hp2018/invite');
-
-  casper.waitForSelector('div[tabindex="0"]');
-
-  casper.wait(6000);
-
-  console.log("SCREEN!");
-  casper.capture('1.png');
-
-}
-
-function photo() {
-
-  var image = "";
-
-  casper.back("https://ent.univ-paris13.fr/");
-
-  casper.thenOpen('https://ent.univ-paris13.fr/ajax?__class=WidgetAvatar&__function=render&__args=user');
-
-  casper.waitForSelector("#cp-originale");
-
-  casper.then(function(){
-     image = this.evaluate(function() {
-         return __utils__.findOne('#cp-originale').getAttribute('src');
-     });
-   });
-
-  return image
-
-}
-
-function dossier_administratif() {
+function dossier() {
 
   var dossier = {};
+  var photo = {};
 
   casper.open('https://ent.univ-paris13.fr/ajax?__class=APOGEE&__function=RenderFiche');
 
@@ -296,12 +233,32 @@ function dossier_administratif() {
     console.log("[!] INE: " + dossier.ine);
     console.log("[!] BIRTHDAY: " + dossier.birthday);
 
-    return dossier;
+    casper.wait(500);
+
+    // Photo
+    casper.thenOpen('https://ent.univ-paris13.fr/ajax?__class=WidgetAvatar&__function=render&__args=user');
+    casper.waitForSelector("#cp-originale", function() {
+
+      // photo.originale = casper.getElementById("cp-originale");
+      // console.log("URL: " + photo.originale);
+
+      casper.evaluate(function () {
+        console.log(document.querySelector('#cp-originale').src);
+      });
+
+    });
 
   });
 
   return dossier;
 
+}
+
+function show_source() {
+  casper.evaluate(function () {
+    console.log("[HTML] " + document.documentElement.innerHTML);
+    return document;
+  });
 }
 
 function run() {
