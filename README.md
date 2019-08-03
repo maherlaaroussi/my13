@@ -1,11 +1,13 @@
 # My13
 
-DESCRIPTION:
+## DESCRIPTION:
 Scrapper ENT de l'Université de Paris 13.
 
-TECHNOLOGIES:
+## TECHNOLOGIES:
 - PhantomJS.
 - CasperJS.
 
-SERVER:
+## SERVER:
 PM2 used to maintain server online foreever and watch errors.
+
+## How to run:
